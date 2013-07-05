@@ -1,19 +1,20 @@
 <?php
+
 namespace MariaInterface;
 
 class Connection
 {
-  var $conn;    /* the database connection */
-  var $name;    /* database name */
-  var $host;    /* server address */
-  var $user;    /* user */
-  var $pass;    /* password */
-  var $port;    /* port */
+  public $conn;     /* the database connection */
+  public $name;     /* database name */
+  public $host;     /* server address */
+  public $user;     /* user */
+  public $pass;     /* password */
+  public $port;     /* port */
 
-  var $struct;  /* database structure */
-  var $cache;   /* pointer to optional opcache */
+  public $cache;    /* optional pointer to opcache */
+  public $traceLog; /* optional tracelog filename */
 
-  var $traceLog; /* optional tracelog filename */
+  private $struct;  /* database structure */
 
   function __construct($data = null)
   {
