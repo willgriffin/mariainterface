@@ -291,8 +291,6 @@ class Connection
     {
       $result = $que->fetch_object();
       return $result;
-    } else {
-      $this->error("ERR dbObj::object [{$this->name}] : {$this->conn->error}<br/>\n$sql", $this->conn->error);
     }
   }
 
@@ -317,11 +315,9 @@ class Connection
     {
       while ($result = $que->fetch_object())
       {
-        $results[] = new oObj($result);
+        $results[] = $result;
       }
       return $results;
-    } else {
-      $this->error("ERR dbObj::getobjects [{$this->name}] : {$this->conn->error}<br/>\n$sql", $this->conn->error);
     }
   }
 
@@ -405,7 +401,7 @@ class Connection
 
   /**
   *
-  * loads structure of database. from opcache if initialized. todo: add cache-clearing mechanism to development control panel
+  * loads structure of database. from opcache if initialized.
   *
   *
   * <code>
