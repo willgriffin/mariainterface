@@ -151,6 +151,7 @@ class Connection
   {
     if ($que = $this->query($sql))
     {
+      
       $row = $que->fetch_row();
       return $row[0];
     } else {
