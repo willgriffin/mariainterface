@@ -77,9 +77,9 @@ class Connection
   * </code>
   *
   */
-  public function insert($sql)
+  public function insert($sql, $prepArgs = false)
   {
-    if ($que = $this->query($sql))
+    if ($que = $this->query($sql, $prepArgs))
     {
       $result = $this->conn->insert_id;
       return $result;
@@ -101,9 +101,9 @@ class Connection
   * </code>
   *
   */
-  public function update($sql)
+  public function update($sql, $prepArgs = false)
   {
-    if ($que = $this->query($sql))
+    if ($que = $this->query($sql, $prepArgs))
     {
       return true;
     }
@@ -126,9 +126,9 @@ class Connection
   *
   */
 
-  public function delete($sql)
+  public function delete($sql, $prepArgs = false)
   {
-    return $this->update($sql);
+    return $this->update($sql, $prepArgs);
   }
 
 
@@ -147,11 +147,11 @@ class Connection
   * ?>
   * </code>
    */
-  public function value($sql)
+  public function value($sql, $prepArgs = false)
   {
-    if ($que = $this->query($sql))
+    if ($que = $this->query($sql, $prepArgs))
     {
-      
+
       $row = $que->fetch_row();
       return $row[0];
     } else {
@@ -174,9 +174,9 @@ class Connection
   * ?>
   * </code>
    */
-  public function column($sql, $index = 0)
+  public function column($sql, $index = 0, $prepArgs = false)
   {
-    if ($que = $this->query($sql))
+    if ($que = $this->query($sql, $prepArgs))
     {
       while ($row = $que->fetch_row())
       {
@@ -201,9 +201,9 @@ class Connection
   * ?>
   * </code>
   */
-  public function json($sql)
+  public function json($sql, $prepArgs = false)
   {
-    return json_encode($this->assocs($sql));
+    return json_encode($this->assocs($sql, $prepArgs));
   }
 
   /**
@@ -221,9 +221,9 @@ class Connection
   * ?>
   * </code>
   */
-  public function assocs($sql)
+  public function assocs($sql, $prepArgs = false)
   {
-    if ($que = $this->query($sql))
+    if ($que = $this->query($sql, $prepArgs))
     {
       if ($que->num_rows > 0)
       {
@@ -256,9 +256,9 @@ class Connection
   * ?>
   * </code>
   */
-  function assoc($sql)
+  function assoc($sql, $prepArgs = false)
   {
-    $results = $this->assocs($sql);
+    $results = $this->assocs($sql, $prepArgs);
     if (count($results) > 0)
     {
       return $results[0];
@@ -286,9 +286,9 @@ class Connection
   * </code>
   */
 
-  public function object($sql)
+  public function object($sql, $prepArgs = false)
   {
-    if ($que = $this->query($sql))
+    if ($que = $this->query($sql, $prepArgs))
     {
       $result = $que->fetch_object();
       return $result;
@@ -310,9 +310,9 @@ class Connection
   * ?>
   * </code>
   */
-  public function objects($sql)
+  public function objects($sql, $prepArgs = false)
   {
-    if ($que = $this->query($sql))
+    if ($que = $this->query($sql, $prepArgs))
     {
       while ($result = $que->fetch_object())
       {
@@ -337,22 +337,33 @@ class Connection
   * ?>
   * </code>
   */
-  public function query($sql)
+  public function query($sql, $prepArgs = false)
   {
-    if (!$this->conn->ping())
-    {
+
+    if (!$this->conn->ping()) {
       $this->conn->close();
       $this->connect();
     }
 
-    try
-    {
-      $que = $this->conn->query($sql);
-    } catch (Exception $e) {
-      $this->error($e->getMessage());
-    }
+    try {
+      if (is_array($prepArgs)) {
+        $stmt = $this->conn->prepare($sql);
+        if (!$stmt) {
+          $this->error("Couldn't prepare statement");
+        } else {
+          $method = new \ReflectionMethod('mysqli_stmt', 'bind_param');
+          $method->invokeArgs($stmt,$prepArgs); /* much love to jan kriedner */
+          $stmt->execute();
+          $result = $stmt->get_result();
+        }
 
-    return $que;
+      } else {
+        $result = $this->conn->query($sql);
+      }
+    } catch (Exception $e) {
+        $this->error($e);
+    }
+    return $result;
   }
 
   /**
