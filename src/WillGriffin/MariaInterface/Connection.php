@@ -361,7 +361,7 @@ class Connection
         $result = $this->conn->query($sql);
       }
     } catch (Exception $e) {
-        $this->error($e);
+        $this->error($e->getMessage());
     }
     return $result;
   }
