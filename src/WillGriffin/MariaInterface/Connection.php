@@ -495,7 +495,7 @@ class Connection
 
     $args = func_get_args();
     if (gettype($args[2]) == 'array') {
-      $result = $this->query($args[1], $this->mkrefs($args[2]));
+      $result = $this->query($args[1], $args[2]);
       list($method,$scope) = [3,4];
     } else if (gettype($args[2]) == 'object') {
       $result = $this->query($args[1]);
@@ -555,7 +555,7 @@ class Connection
           $this->error("Couldn't prepare statement");
         } else {
           $method = new \ReflectionMethod('mysqli_stmt', 'bind_param');
-          $method->invokeArgs($stmt, $prepArgs); /* much love to jan kriedner */
+          $method->invokeArgs($stmt, $this->mkrefs($prepArgs)); /* much love to jan kriedner */
           $stmt->execute();
           $result = $stmt->get_result();
         }
