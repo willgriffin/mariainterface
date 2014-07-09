@@ -80,10 +80,14 @@ class Connection
   */
   public function insert($sql, $prepArgs = false)
   {
-    if ($que = $this->query($sql, $prepArgs))
-    {
+    if ($que = $this->query($sql, $prepArgs)) {
       $result = $this->conn->insert_id;
       return $result;
+    } else {
+      echo "Invalid query\n";
+      echo "$sql\n";
+      var_dump($prepArgs);
+      die;
     }
   }
 
@@ -105,8 +109,7 @@ class Connection
   */
   public function update($sql, $prepArgs = false)
   {
-    if ($que = $this->query($sql, $prepArgs))
-    {
+    if ($que = $this->query($sql, $prepArgs)) {
       return true;
     }
   }
@@ -153,8 +156,7 @@ class Connection
    */
   public function value($sql, $prepArgs = false)
   {
-    if ($que = $this->query($sql, $prepArgs))
-    {
+    if ($que = $this->query($sql, $prepArgs)) {
       $row = $que->fetch_row();
       return $row[0];
     } else {
@@ -180,8 +182,7 @@ class Connection
    */
   public function column($sql, $index = 0, $prepArgs = false)
   {
-    if ($que = $this->query($sql, $prepArgs))
-    {
+    if ($que = $this->query($sql, $prepArgs)) {
       while ($row = $que->fetch_row())
       {
         $result[] = $row[$index];
@@ -262,10 +263,8 @@ class Connection
   */
   public function assocs($sql, $prepArgs = false)
   {
-    if ($que = $this->query($sql, $prepArgs))
-    {
-      if ($que->num_rows > 0)
-      {
+    if ($que = $this->query($sql, $prepArgs)) {
+      if ($que->num_rows > 0) {
         while($row = $que->fetch_assoc())
         {
           $result[] = $row;
@@ -302,8 +301,7 @@ class Connection
   function assoc($sql, $prepArgs = false)
   {
     $results = $this->assocs($sql, $prepArgs);
-    if (count($results) > 0)
-    {
+    if (count($results) > 0) {
       return $results[0];
     } else {
       return $results;
@@ -363,8 +361,7 @@ class Connection
 
   public function object($sql, $prepArgs = false)
   {
-    if ($que = $this->query($sql, $prepArgs))
-    {
+    if ($que = $this->query($sql, $prepArgs)) {
       $result = $que->fetch_object();
       return $result;
     }
@@ -391,8 +388,7 @@ class Connection
   * ?>
   * </code>
   */
-  public function objects($sql, $prepArgs = false)
-  {
+  public function objects($sql, $prepArgs = false) {
     if ($que = $this->query($sql, $prepArgs))
     {
       while ($result = $que->fetch_object())
@@ -426,8 +422,7 @@ class Connection
   * </code>
   */
 
-  public function foreachObject()
-  {
+  public function foreachObject() {
     $args = func_get_args();
     return $this->each('object', $args[0], $args[1], $args[2], $args[3]);
   }
@@ -551,20 +546,24 @@ class Connection
     try {
       if (is_array($prepArgs)) {
         $stmt = $this->conn->prepare($sql);
-        if (!$stmt) {
-          $this->error("Couldn't prepare statement");
+        if (false === $stmt) {
+          $this->error("Couldn't prepare statement: ".$this->conn->error);
         } else {
           $method = new \ReflectionMethod('mysqli_stmt', 'bind_param');
           $method->invokeArgs($stmt, $this->mkrefs($prepArgs)); /* much love to jan kriedner */
           $stmt->execute();
-          $result = $stmt->get_result();
-        }
 
+          if ($stmt->insert_id > 0) {
+            $result = $stmt->insert_id;
+          } else {
+            $result = $stmt->get_result();
+          }
+        }
       } else {
         $result = $this->conn->query($sql);
       }
     } catch (Exception $e) {
-        $this->error($e->getMessage());
+      $this->error($e->getMessage());
     }
     return $result;
   }
