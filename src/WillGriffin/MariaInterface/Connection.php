@@ -18,40 +18,34 @@ class Connection
 
   function __construct($data = null)
   {
-    if ($data['conn'])
-    {
+    if ($data['conn']) {
       $this->conn = $data['conn'];
     } else {
-      if (empty($data['host']))
-      {
+      if (empty($data['host'])) {
         $this->host = "localhost";
       } else {
         $this->host = $data['host'];
       }
 
-      if (empty($data['name']))
-      {
+      if (empty($data['name'])) {
         $this->name = "";
       } else {
         $this->name = $data['name'];
       }
 
-      if (empty($data['user']))
-      {
+      if (empty($data['user'])) {
         $this->user = "";
       } else {
         $this->user = $data['user'];
       }
 
-      if (empty($data['pass']))
-      {
+      if (empty($data['pass'])) {
         $this->pass = "";
       } else {
         $this->pass = $data['pass'];
       }
 
-      if (empty($data['port']))
-      {
+      if (empty($data['port'])) {
         $this->port = "";
       } else {
         $this->port = $data['port'];
@@ -183,8 +177,7 @@ class Connection
   public function column($sql, $index = 0, $prepArgs = false)
   {
     if ($que = $this->query($sql, $prepArgs)) {
-      while ($row = $que->fetch_row())
-      {
+      while ($row = $que->fetch_row()) {
         $result[] = $row[$index];
       }
       return $result;
@@ -265,8 +258,7 @@ class Connection
   {
     if ($que = $this->query($sql, $prepArgs)) {
       if ($que->num_rows > 0) {
-        while($row = $que->fetch_assoc())
-        {
+        while($row = $que->fetch_assoc()) {
           $result[] = $row;
         }
       } else {
@@ -389,10 +381,8 @@ class Connection
   * </code>
   */
   public function objects($sql, $prepArgs = false) {
-    if ($que = $this->query($sql, $prepArgs))
-    {
-      while ($result = $que->fetch_object())
-      {
+    if ($que = $this->query($sql, $prepArgs)) {
+      while ($result = $que->fetch_object()) {
         $results[] = $result;
       }
       return $results;
@@ -563,7 +553,7 @@ class Connection
         $result = $this->conn->query($sql);
       }
     } catch (Exception $e) {
-      $this->error($e->getMessage());
+      $this->error($e->getMessage()." SQL: $sql");
     }
     return $result;
   }
@@ -608,11 +598,6 @@ class Connection
     return $this->conn->real_escape_string($str);
   }
 
-  public function cleanString($str)
-  {
-    return $this->esc($str);
-  }
-
   /**
   * probably broken
   * loads structure of database. from opcache if initialized. (broken)
@@ -626,25 +611,21 @@ class Connection
   * ?>
   * </code>
   */
-  function loadStructure()
+  private function loadStructure()
   {
 
     $startTime = microtime(true);
     $cached = $this->cache->dbstruct;
-    if (empty($cached))
-    {
+    if (empty($cached)) {
       $dbtables = $this->getlist("show tables");
       if (count($dbtables) > 0)
-        foreach ($dbtables as $table)
-        {
+        foreach ($dbtables as $table) {
           $tables[$table]['name'] = $table;
           $columns = $this->getobjects("show columns from $table");
-          foreach ($columns as $column)
-          {
+          foreach ($columns as $column) {
             $tables[$table]['columns'][] = $column->Field;
             /* mysql properties of the column Field,Type,Null,Key,Default,Extra */
-            if ($column->Key == "PRI")
-            {
+            if ($column->Key == "PRI") {
               $tables[$table]['pk'] = $column->Field;
               $primary_keys["{$column->Field}"] = $table;
             }
@@ -653,28 +634,22 @@ class Connection
 
       /* find relationships */
       if (count($tables) > 0)
-        foreach ($tables as $tablename => $table)
-        {
-          foreach ($table['columns'] as $column)
-          {
-            if ($column != $table['pk'] && array_key_exists($column, $primary_keys))
-            {
+        foreach ($tables as $tablename => $table) {
+          foreach ($table['columns'] as $column) {
+            if ($column != $table['pk'] && array_key_exists($column, $primary_keys)) {
               $joined_table = $primary_keys[$column];
               $tables[$tablename]['linkedto'][] = $joined_table;
             }
 
-            if ($column == $table['pk'])
-            {
-              foreach ($tables as $linktblkey => $linktbl)
-              {
-                if ($linktbl != $table)
-                  foreach ($linktbl['columns'] as $lnkcol)
-                  {
-                    if ($lnkcol == $column)
-                    {
+            if ($column == $table['pk']) {
+              foreach ($tables as $linktblkey => $linktbl) {
+                if ($linktbl != $table) {
+                  foreach ($linktbl['columns'] as $lnkcol) {
+                    if ($lnkcol == $column) {
                       $tables[$tablename]['linkedfrom'][] = $linktblkey;
                     }
                   }
+                }
               }
             }
           }
@@ -714,38 +689,35 @@ class Connection
   public function isDescendant($descendant_table, $descendant_id, $ancestor_table, $ancestor_id)
   {
     $joins = $this->findJoins($descendant_table, $ancestor_table);
-    $sql = "select count(*) from $descendant_table ";
+    $sql = "select count(*) from $descendant_table "; //todo: count(*) is slow
 
-    if (is_array($joins) && count($joins) > 0)
-    {
+    if (is_array($joins) && count($joins) > 0) {
 
-      if (!$lastjoin)
+      if (!$lastjoin) {
         $lastjoin = $descendant_table;
+      }
 
-      for ($x = 1; $x < count($joins); $x++)
-      {
+      for ($x = 1; $x < count($joins); $x++) {
         $jointable = $joins[$x];
         $sql .= "inner join $jointable on $jointable.".$this->tables->{$jointable}->pk." =  $lastjoin.".$this->tables->{$jointable}->pk." ";
         $lastjoin = $jointable;
       }
 
       $sql .= " where $descendant_table.".$this->tables->{$descendant_table}->pk." = $descendant_id and $ancestor_table.".$this->tables->{$ancestor_table}->pk." = $ancestor_id";
-      if ($this->value($sql) > 0)
-      {
+
+      if ($this->value($sql) > 0) {
         return true;
       } else {
         return false;
       }
-
     } else  {
       return false;
     }
-    return $sql;
   }
 
   /**
   * probably broken
-  * try and find how two tables are related. find the salemen at least one path, could get weird
+  * try and find how two tables are related. find the salemen at least one path. could get weird
   *
   *
   * @param string $descendant_table descendant table
@@ -761,32 +733,26 @@ class Connection
   */
   public function findJoins($start, $end, $joins = false)
   {
-    if (count($joins) > 100) /* catch runaways */
-    {
+    if (count($joins) > 100) { /* catch runaways */
       $this->error("runaway search aborted"); //todo: if this error is seen figure out why
     }
 
-    if (isset($this->tables->{$start}) && isset($this->tables->{$end}))
-    {
-      if (count($this->tables->{$start}->linkedto) > 0 && in_array($end, $this->tables->{$start}->linkedto))
-      {
+    if (isset($this->tables->{$start}) && isset($this->tables->{$end})) {
+      if (count($this->tables->{$start}->linkedto) > 0 && in_array($end, $this->tables->{$start}->linkedto)) {
         $endpointindex = array_search($end, $this->tables->{$start}->linkedto);
         $endpoint = $this->tables->{$start}->linkedto[$endpointindex];
         $joins[] = $endpoint;
         return $joins;
       } else {
-        if ($joins[(count($joins) - 1)] != $start) /* why is this here */
+        if ($joins[(count($joins) - 1)] != $start) //todo: why is this here
           $joins[] = $start;
 
-        if (count($this->tables->{$start}->linkedto) > 0)
-        {
-          foreach ($this->tables->{$start}->linkedto as $subtable)
-          {
-            if (!in_array($subtable, $joins)) // avoid getting caught in a loop
-            {
+        if (count($this->tables->{$start}->linkedto) > 0) {
+          foreach ($this->tables->{$start}->linkedto as $subtable) {
+            if (!in_array($subtable, $joins)) {// avoid getting caught in a loop
+
               $check = $this->findJoins($subtable, $end, array_merge($joins, array($subtable)));
-              if ($check)
-              {
+              if ($check) {
                 return $check;
               }
             }
@@ -816,8 +782,7 @@ class Connection
 
   private function writetolog($entry)
   {
-    if ($this->traceLog)
-    {
+    if ($this->traceLog) {
       try {
         file_put_contents($this->traceLog, "$datestamp $entry\n", FILE_APPEND);
       } catch (Exception $e) {
