@@ -18,7 +18,7 @@ class Connection
 
   function __construct($data = null)
   {
-    if ($data['conn']) {
+    if (isset($data['conn'])) {
       $this->conn = $data['conn'];
     } else {
       if (empty($data['host'])) {
@@ -765,6 +765,14 @@ class Connection
     }
   }
 
+
+  public function close()
+  {
+    $this->conn->close();
+  }
+
+
+
   private function trace($msg)
   {
     $this->writetolog("[".date("Y-m-d H:i:s")."] ".$msg);
@@ -786,9 +794,8 @@ class Connection
       try {
         file_put_contents($this->traceLog, "$datestamp $entry\n", FILE_APPEND);
       } catch (Exception $e) {
-        $this->error("tracelog file specified by not writeable");
+        $this->error("tracelog file specified but not writeable");
       }
     }
   }
 }
-
