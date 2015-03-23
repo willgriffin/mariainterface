@@ -1,21 +1,31 @@
 {
-    "name": "willgriffin/mariainterface",
-    "description": "MariaDB Interface PHP Class",
-    "type": "library",
-    "license": "BSD",
-    "authors": [
-        {
-            "name": "Will Griffin",
-            "email": "willgriffin@gmail.com"
-        }
-    ],
-    "minimum-stability": "dev",
-    "require": {
-    	"php": ">5.4.0"
-    },
-    "autoload": {
-    	"psr-0": {
-    		"WillGriffin" : "src/"
-    	}
-    }
+	"name": "willgriffin/mariainterface",
+	"version": "0.1.0",
+	"homepage": "https://github.com/willgriffin/mariainterface",
+	"description": "",
+	"keywords": [
+		"php"
+	],
+	"authors": [
+		{
+			"name": "willgriffin",
+			"homepage": "https://github.com/willgriffin",
+			"role": "Developer"
+		}
+	],
+	"support": {
+		"issues": "https://github.com/willgriffin/mariainterface/issues",
+		"source": "https://github.com/willgriffin/mariainterface"
+	},
+	"license": "MIT",
+	"type": "library",
+	"require": {
+		"php": ">=5.3.0",
+		"monolog/monolog": "1.*"
+	},
+	"require-dev": {
+		"phpdocumentor/phpdocumentor": "2.*",
+		"phpunit/phpunit": "3.*",
+		"sebastian/phpcpd": "2.*"
+	}
 }
