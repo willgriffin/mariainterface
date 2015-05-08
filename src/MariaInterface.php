@@ -11,7 +11,7 @@
 
 namespace willgriffin\MariaInterface;
 
-require(dirname(dirname(dirname(dirname(__FILE__)))) . '/vendor/autoload.php');
+require(dirname(dirname(dirname(dirname(__FILE__)))) . '/autoload.php');
 
 /**
  * The MariaInterface class
